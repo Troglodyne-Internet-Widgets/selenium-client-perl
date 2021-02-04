@@ -1,4 +1,4 @@
-# selenium-client-perl
+# Selenium::Client
 
 WC3 Standard selenium client
 
