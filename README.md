@@ -45,9 +45,9 @@ This is a Dist::Zilla CPAN module.  To build this project, do the following:
 
 * Install Dist::Zilla either via cpan or your favorite package manager
 
-`dzil authordeps --missing | sudo cpanm`
-`dzil listdeps   --missing | sudo cpanm`
-`dzil build`
+* `dzil authordeps --missing | sudo cpanm`
+* `dzil listdeps   --missing | sudo cpanm`
+* `dzil build`
 
 ## TESTING
 
