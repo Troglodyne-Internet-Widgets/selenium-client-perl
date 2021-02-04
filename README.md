@@ -34,6 +34,11 @@ Pure perl selenium grid API server
 
 Drop-in replacement for Selenium::Remote::Driver
 
+## Care and feeding
+
+This module stores a number of things in your homedirectory's .selenium folder.
+You may want to clear this out periodically, as various log files and configuration data becomes stale.
+
 ## TESTING
 
 To check how this works with your setup, install Selenium::Client from CPAN (or just clone this repo), and then run:
