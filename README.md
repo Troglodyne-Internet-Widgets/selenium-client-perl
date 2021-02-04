@@ -39,6 +39,16 @@ Drop-in replacement for Selenium::Remote::Driver
 This module stores a number of things in your homedirectory's .selenium folder.
 You may want to clear this out periodically, as various log files and configuration data becomes stale.
 
+## BUILDING
+
+This is a Dist::Zilla CPAN module.  To build this project, do the following:
+
+* Install Dist::Zilla either via cpan or your favorite package manager
+
+`dzil authordeps --missing | sudo cpanm`
+`dzil listdeps   --missing | sudo cpanm`
+`dzil build`
+
 ## TESTING
 
 To check how this works with your setup, install Selenium::Client from CPAN (or just clone this repo), and then run:
