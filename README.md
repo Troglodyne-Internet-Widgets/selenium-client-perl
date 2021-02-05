@@ -22,6 +22,8 @@ Module to turn the Online specification documents for Selenium into JSON specifi
 
 Soon to come:
 
+- BrowserMob Proxy integration
+
 - Selenium::Server
 
 Pure perl selenium server (that proxies commands to browser drivers, much like the SeleniumHQ Jar)
@@ -29,6 +31,10 @@ Pure perl selenium server (that proxies commands to browser drivers, much like t
 - Selenium::Grid
 
 Pure perl selenium grid API server
+
+- Selenium::Driver::Playwright
+
+Selenium implemented in playwright (so that it no longer is crippled by inability to access some attrs/props)
 
 - Selenium::Client::SRD
 
