@@ -227,7 +227,13 @@ sub _do_spawn($self) {
     #XXX so we have to just bg & ignore, unfortunately (also have to system())
     if (_is_windows()) {
         $self->{pid} = qq/$self->{driver}:$self->{port}/;
-        my $cmdstring = join(' ', "start /MIN", qq{"$self->{pid}"}, @{$self->{command}}, '>', $self->{log_file}, '2>&1');
+        my @cmdprefix = ("start /MIN", qq{"$self->{pid}"});
+
+        # Selenium JAR controls it's own logging because Java
+        my @cmdsuffix;
+        @cmdsuffix = ('>', $self->{log_file}, '2>&1') unless $self->{driver_class} eq 'Selenium::Driver::SeleniumHQ::Jar';
+
+        my $cmdstring = join(' ', @cmdprefix, @{$self->{command}}, @cmdsuffix );
         print "$cmdstring\n" if $self->{debug};
         system($cmdstring);
         return $self->_wait();
