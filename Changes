@@ -1,5 +1,9 @@
 Revision history for Selenium-Client
 
+1.01 2021-02-05 TEODESIAN
+    [BUG FIXES]
+    - Fix issue with spawning Selenium JARs on Win32
+
 1.00  2021-02-04 TEODESIAN
     - Initial release
 
