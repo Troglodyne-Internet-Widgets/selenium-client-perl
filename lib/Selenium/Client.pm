@@ -14,6 +14,7 @@ use Carp qw{confess};
 use File::Path qw{make_path};
 use File::HomeDir();
 use File::Slurper();
+use File::Spec();
 use Sub::Install();
 use Net::EmptyPort();
 use Capture::Tiny qw{capture_merged};
@@ -136,8 +137,11 @@ sub new($class,%options) {
     $options{auto_close} //= 1;
     $options{browser}    //= '';
 
+    #create client_dir and log-dir
+    my $dir = File::Spec->catdir( $options{client_dir},"perl-client" );
+    make_path($dir);
     #Grab the spec
-    $options{spec}       = Selenium::Specification::read($options{version},$options{nofetch});
+    $options{spec}= Selenium::Specification::read($options{client_dir},$options{version},$options{nofetch});
 
     my $self = bless(\%options, $class);
     $self->{sessions} = [];
