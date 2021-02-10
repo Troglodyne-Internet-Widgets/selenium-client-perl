@@ -1,6 +1,10 @@
 Revision history for Selenium-Client
 
-1.01 2021-02-05 TEODESIAN
+1.02 2021-02-10 TEODESIAN
+    [BUG FIXES]
+    - Declare minimum version of perl 5.28
+
+1.01 2021-02-09 TEODESIAN
     [BUG FIXES]
     - Fix issue with spawning Selenium JARs on Win32
     - Fix issue with setting up needed folders in homedir (Thanks to Manni Heumann)
