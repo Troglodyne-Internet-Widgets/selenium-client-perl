@@ -5,6 +5,8 @@ package Selenium::Subclass;
 use strict;
 use warnings;
 
+use v5.28;
+
 no warnings 'experimental';
 use feature qw/signatures/;
 
