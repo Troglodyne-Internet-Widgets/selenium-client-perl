@@ -61,6 +61,10 @@ To check how this works with your setup, install Selenium::Client from CPAN (or 
 
 `prove -vm -Ilib at/sanity.test`
 
+If you encounter problems, you can get extra debugging output (which would be very much appreciated in any issues you file):
+
+`NO_HEADLESS=1 DEBUG=1 prove -vm -Ilib at/sanity.test`
+
 This runs through 100% of the WC3 selenium API.
 At release it passed on all of the supported browsers on:
 

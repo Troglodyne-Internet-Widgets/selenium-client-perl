@@ -37,15 +37,15 @@ Remote Server options:
 =over 4
 
 =item C<version> ENUM (stable,draft,unstable) - WC3 Spec to use.
-        
+
 Default: stable
 
 =item C<host> STRING - hostname of your server.
-        
+
 Default: localhost
 
 =item C<prefix> STRING - any prefix needed to communicate with the server, such as /wd, /hub, /wd/hub, or /grid
-        
+
 Default: ''
 
 =item C<port> INTEGER - Port which the server is listening on.
@@ -54,19 +54,19 @@ Default: 4444
 Note: when spawning, this will be ignored and a random port chosen instead.
 
 =item C<scheme> ENUM (http,https) - HTTP scheme to use
-        
+
 Default: http
 
 =item C<nofetch> BOOL - Do not check for a newer copy of the WC3 specifications on startup if we already have them available.
-        
+
 Default: 1
 
 =item C<client_dir> STRING - Where to store specs and other files downloaded when spawning servers.
-        
+
 Default: ~/.selenium
 
 =item C<debug> BOOLEAN - Whether to print out various debugging output.
-        
+
 Default: false
 
 =item C<auto_close> BOOLEAN - Automatically close spawned selenium servers and sessions.
@@ -104,6 +104,10 @@ If we can't find one, we'll fall back to SeleniumHQ::Jar.
 
 Default: Blank
 
+=item C<headless> BOOL - Whether to run the browser headless.  Ignored by 'Safari' Driver.
+
+Default: True
+
 =item C<driver_version> STRING - Version of your driver software you wish to download and run.
 
 Blank and Partial versions will return the latest sub-version available.
@@ -135,6 +139,7 @@ sub new($class,%options) {
     $options{post_callbacks} //= [];
     $options{auto_close} //= 1;
     $options{browser}    //= '';
+    $options{headless}   //= 1;
 
     #Grab the spec
     $options{spec}       = Selenium::Specification::read($options{version},$options{nofetch});
@@ -175,6 +180,28 @@ We return a list of items which are a hashref per item in the result (some of th
 For example, NewSession will return a Selenium::Capabilities and Selenium::Session object.
 The order in which they are returned will be ordered alphabetically.
 
+=head2 Passing Capabilities to NewSession()
+
+By default, we will pass a set of capabilities that satisfy the options passed to new().
+
+If you want *other* capabilities, pass them directly to NewSession as documented in the WC3 spec.
+
+However, this will ignore what you passed to new().  Caveat emptor.
+
+For the general list of options supported by each browser, see here:
+
+=over 4
+
+=item C<Firefox> - https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions
+
+=item C<Chrome> - https://sites.google.com/a/chromium.org/chromedriver/capabilities
+
+=item C<Edge> - https://docs.microsoft.com/en-us/microsoft-edge/webdriver-chromium/capabilities-edge-options
+
+=item C<Safari> - https://developer.apple.com/documentation/webkit/about_webdriver_for_safari
+
+=back
+
 =head2 catalog(BOOL verbose=0) = HASHREF
 
 Returns the entire method catalog.
@@ -188,6 +215,55 @@ sub catalog($self,$printed=0) {
         print "$method: $self->{spec}{$method}{href}\n";
     }
     return $self->{spec};
+}
+
+my %browser_opts = (
+    firefox       => {
+        name => 'moz:firefoxOptions',
+        headless => sub ($c) {
+            $c->{args} //= [];
+            push(@{$c->{args}}, '-headless');
+        },
+    },
+    chrome        => {
+        name => 'goog:chromeOptions',
+        headless => sub ($c) {
+            $c->{args} //= [];
+            push(@{$c->{args}}, 'headless');
+        },
+    },
+    MicrosoftEdge => {
+        name =>'ms:EdgeOptions',
+        headless => sub ($c) {
+            $c->{args} //= [];
+            push(@{$c->{args}}, 'headless');
+        },
+    },
+);
+
+sub _build_caps($self,%options) {
+    $options{browser}  = $self->{browser}  if $self->{browser};
+    $options{headless} = $self->{headless} if $self->{headless};
+
+    my $c = {
+        browserName  => $options{browser},
+    };
+    my $browser = $browser_opts{$options{browser}};
+
+    if ($browser) {
+        my $browseropts = {};
+        foreach my $k (keys %$browser) {
+            next if $k eq 'name';
+            $browser->{$k}->($browseropts) if $options{$k};
+        }
+        $c->{$browser->{name}} = $browseropts;
+    }
+
+    return (
+        capabilities => {
+            alwaysMatch => $c,
+        },
+    );
 }
 
 sub _build_subs($self) {
@@ -321,6 +397,9 @@ sub _request($self, $method, %params) {
 
     # Keep sessions for passing to grandchildren
     $inject->{to_inject}{sessionid} = $params{sessionid} if exists $params{sessionid};
+
+    #If we have no extra params, and this is getSession, simplify
+    %params = $self->_build_caps() if $method eq 'NewSession' && !%params;
 
     foreach my $param (keys(%params)) {
         confess "$param is required for $method" unless exists $params{$param};
