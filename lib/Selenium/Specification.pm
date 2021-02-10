@@ -39,7 +39,6 @@ our %spec_urls = (
 our $browser = HTTP::Tiny->new();
 my %state;
 my $parse = [];
-my $dir = File::Spec->catdir( File::HomeDir::my_home(),".selenium","specs" );
 our $method = {};
 
 =head1 SUBROUTINES
@@ -50,9 +49,10 @@ Reads the copy of the provided spec type, and fetches it if a cached version is 
 
 =cut
 
-sub read($type='stable', $nofetch=1) {
+sub read($client_dir, $type='stable', $nofetch=1) {
+    my $dir = File::Spec->catdir( $client_dir,"specs" );
     my $file =  File::Spec->catfile( "$dir","$type.json");
-    fetch( once => $nofetch );
+    fetch( once => $nofetch, dir => $dir );
     die "could not write $file: $@" unless -f $file;
     my $buf = File::Slurper::read_text($file);
     my $array = JSON::MaybeXS::decode_json($buf);
@@ -69,7 +69,7 @@ Builds a spec hash based upon the WC3 specification documents, and writes it to 
 
 #TODO needs to grab args and argtypes still
 sub fetch (%options) {
-    $dir = $options{dir} if $options{dir};
+    my $dir = $options{dir};
 
     my $rc = 0;
     foreach my $spec ( sort keys(%spec_urls) ) {
