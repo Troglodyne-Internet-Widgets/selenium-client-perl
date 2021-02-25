@@ -23,6 +23,31 @@ $extra = '/' if grep { $^O eq $_ } qw{msys MSWin32};
 my $sut  = 'file://' . $extra . abs_path("$FindBin::Bin/test.html");
 my $sut2 = 'file://' . $extra . abs_path("$FindBin::Bin/other.html");
 
+#Do WinAppDriver testing if we are on windows and have it installed at all
+
+my $winapp = eval { Selenium::Client->new( driver => 'WinApp', debug => $ENV{DEBUG} ) };
+if ($winapp) {
+    my $caps = {
+        app           => 'C:\\Windows\\System32\\notepad.exe',
+        platformName  => "WINDOWS",
+        platform      => "WINDOWS",
+        deviceName    => "WindowsPC",
+        appArguments  => "zippy.txt",
+        appWorkingDir => '.',
+        "ms:experimental-webdriver" => JSON::true,
+    };
+
+    #XXX the WC3 support is only "sorta" in that they don't support modern caps
+    my @ret = $winapp->NewSession( desiredCapabilities => $caps );
+    use Data::Dumper;
+    print Dumper(\@ret);
+    my $notepad;
+    my $input = $notepad->FindElement( using => 'css selector', value => 'Edit' );
+    $input->ElementSendKeys( text => 'tickle');
+    is($input->GetElementProperty( name => 'value' ), 'tickle', "Can clear and send keys to a text input");
+}
+die;
+
 my @browsers = qw{firefox chrome};
 push(@browsers, 'MicrosoftEdge') if grep { $^O eq $_ } qw{MSWin32 msys};
 push(@browsers, 'safari') if $^O eq 'darwin';
