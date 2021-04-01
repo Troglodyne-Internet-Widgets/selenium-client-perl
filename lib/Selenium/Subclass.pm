@@ -35,6 +35,8 @@ sub _request ($self, $method, %params) {
     if ( $self->{sortfield} eq 'element-6066-11e4-a52e-4f735466cecf') {
         $self->{sortfield} = 'elementid';
         $self->{elementid} = delete $self->{'element-6066-11e4-a52e-4f735466cecf'};
+        # Ensure element childs don't think they are their parent
+        $self->{to_inject}{elementid} = $self->{elementid};
     }
 
     # Inject our sortField param, and anything else we need to
@@ -42,7 +44,10 @@ sub _request ($self, $method, %params) {
     my $inject = $self->{to_inject};
     @params{keys(%$inject)} = values(%$inject) if ref $inject eq 'HASH';
 
-    # and insure it is injected into child object requests
+    # and ensure it is injected into child object requests
+    # This is primarily to ensure that the session ID trickles down correctly.
+    # Some also need the element ID to trickle down.
+    # However, in the case of getting child elements, we wish to specifically prevent that, and do so above.
     $params{inject} = $self->{sortfield};
 
     $self->{callback}->($self,$method,%params) if $self->{callback};
