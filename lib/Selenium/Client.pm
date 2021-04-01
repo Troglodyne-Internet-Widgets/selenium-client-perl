@@ -541,6 +541,8 @@ __END__
 =head1 STUPID SELENIUM TRICKS
 
 There are a variety of quirks with Selenium drivers that you just have to put up with, don't log bugs on these behaviors.
+Most of this will probably change in the future,
+as these are firmly in the "undefined/undocumented behavior" stack of the browser vendors.
 
 =head3 alerts
 
@@ -590,6 +592,23 @@ Different browser drivers also handle window handles differently.
 Chrome in particular demands you stringify handles returned from the driver.
 It also seems to be a lot less cooperative than firefox when setting the WindowRect.
 
+=head3 frames
+
+In the SwitchToFrame documentation, the claim is made that passing the element ID of a <frame> or <iframe> will switch the browsing context of the session to that frame.
+This is quite obviously false in every driver known.  Example:
+
+    # This does not ever work
+    $session->SwitchToFrame( id => $session->FindElement( using => 'css selector', value => '#frame' )->{elementid} );
+
+The only thing that actually works is switching by array index as you would get from window.frames in javascript:
+
+    # Supposing #frame is the first frame encountered in the DOM, this works
+    $session->SwitchToFrame( id => 0 );
+
+As you might imagine this is a significant barrier to reliable automation as not every JS interperter will necessarily index in the same order.
+Nor is there, say, a GetFrames() method from which you could sensibly pick which one you want and move from there.
+The only workaround here would be to always execute a script to interrogate window.frames and guess which one you want based on the output of that.
+
 =head3 arguments
 
 If you make a request of the server with arguments it does not understand it will hang for 30s, so set a SIGALRM handler if you insist on doing so.
@@ -605,6 +624,9 @@ Kind of like how you'll die if you use a perl without signatures with this modul
 Also, due to perl pseudo-forks hanging forever if anything is ever waiting on read() in windows, we don't fork to spawn binaries.
 Instead we use C<start> to open a new cmd.exe window, which will show up in your task tray.
 Don't close this or your test will fail for obvious reasons.
+
+This also means that if you have to send ^C (SIGTERM) to your script or exit() prematurely, said window may be left dangling,
+as these behave a lot more like POSIX::_exit() does on unix systems.
 
 =head1 AUTHOR
 

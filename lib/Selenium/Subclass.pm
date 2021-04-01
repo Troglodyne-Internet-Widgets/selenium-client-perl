@@ -26,15 +26,20 @@ sub new ($class,$parent,$data) {
     my $self = bless(\%lowkey,$class);
 
     $self->_build_subs($class);
+
+    # Make sure this is set so we can expose it for use it in various other calls by end-users
+    if ( $self->{sortfield} eq 'element-6066-11e4-a52e-4f735466cecf') {
+        $self->{sortfield} = 'elementid';
+        $self->{elementid} = delete $self->{'element-6066-11e4-a52e-4f735466cecf'};
+    }
+
     return $self;
 }
 
 sub _request ($self, $method, %params) {
 
     #XXX BAD SPEC AUTHOR, BAD!
-    if ( $self->{sortfield} eq 'element-6066-11e4-a52e-4f735466cecf') {
-        $self->{sortfield} = 'elementid';
-        $self->{elementid} = delete $self->{'element-6066-11e4-a52e-4f735466cecf'};
+    if ( $self->{sortfield} eq 'elementid') {
         # Ensure element childs don't think they are their parent
         $self->{to_inject}{elementid} = $self->{elementid};
     }
