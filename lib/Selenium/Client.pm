@@ -343,6 +343,8 @@ sub _wait ($self) {
 sub DESTROY($self) {
     return unless $self->{auto_close};
 
+    local $?; # Avoid affecting the exit status
+
     print "Shutting down active sessions...\n" if $self->{debug};
     #murder all sessions we spawned so that die() cleans up properly
     if ($self->{ua} && @{$self->{sessions}}) {
