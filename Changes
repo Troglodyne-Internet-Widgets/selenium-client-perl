@@ -1,5 +1,10 @@
 Revision history for Selenium-Client
 
+1.03 2021-04-12 TEODESIAN
+    [BUG FIXES]
+    - Don't clobber $? in destructor
+    - Use Playwright.pm's more clever DESTROY code
+
 1.02 2021-02-10 TEODESIAN
     [BUG FIXES]
     - Declare minimum version of perl 5.28
