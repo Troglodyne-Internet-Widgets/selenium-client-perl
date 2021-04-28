@@ -2,12 +2,13 @@
 
 use strict;
 use warnings;
+use utf8;
 
 use Test2::V0;
 
 #XXX Test2 Knows Better TM
 no warnings 'experimental';
-use feature qw/signatures/;
+use feature qw/signatures unicode_strings/;
 
 use Test::Fatal;
 use FindBin;
@@ -131,6 +132,7 @@ foreach my $browser (@browsers) {
             is( exception { $session->SwitchToWindow( handle => $handle ) }, undef, "Can switch to old window");
 
             like($session->GetPageSource(), qr/Howdy/i, "Switched window correctly");
+            like($session->GetPageSource(), qr/🥰/i, "Unicode handled properly");
             $session->SwitchToWindow( handle => $newhandle );
             is( exception { $session->CloseWindow() }, undef, "CloseWindow closes current window context");
             $session->SwitchToWindow( handle => $handle );

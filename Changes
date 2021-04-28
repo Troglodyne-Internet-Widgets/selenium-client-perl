@@ -1,5 +1,12 @@
 Revision history for Selenium-Client
 
+1.04 2021-04-?? TEODESIAN
+    [BUG FIXES]
+    - Handle UTF-8 content correctly
+    [NEW FEATURES]
+    - Automatically normalize data returned by the selenium server, and add normalize parameter to constructor
+    - Add advice on proper UTF-8 handling in callers
+
 1.03 2021-04-12 TEODESIAN
     [BUG FIXES]
     - Don't clobber $? in destructor
