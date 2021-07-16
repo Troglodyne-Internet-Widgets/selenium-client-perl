@@ -198,6 +198,10 @@ foreach my $browser (@browsers) {
             my $clickme = $session->FindElement( using => 'css selector', value => '#clickme' );
             is($clickme->GetElementText(),'PARTY HARD', "Can get element text");
 
+            $driver->{fatal} = 0;
+            is(exception { $session->FindElement( using => 'css selector', value => 'bogus' ) }, undef, "Turning off fatality works");
+            $driver->{fatal} = 1;
+
             my $rkt = $clickme->GetElementRect();
             ok(defined $rkt->{x},"GetElementRect appears to function");
 

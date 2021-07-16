@@ -13,7 +13,7 @@ use feature qw/signatures/;
 
 use JSON::MaybeXS();
 use HTTP::Tiny();
-use Carp qw{confess};
+use Carp qw{confess cluck};
 use File::Path qw{make_path};
 use File::HomeDir();
 use File::Slurper();
@@ -94,6 +94,12 @@ Use this to implement custom error handlers, testing harness modifications etc.
 Return a truthy value to immediately exit the request subroutine after all cbs are executed.
 Truthy values (if any are returned) are returned in order encountered.
 
+=item C<fatal> BOOLEAN - Whether or not to die on errors from the selenium server.
+
+Default: true
+
+Useful to turn off when using post_callbacks as error handlers.
+
 =back
 
 When using remote servers, you should take extra care that they automatically clean up after themselves.
@@ -152,6 +158,7 @@ sub new($class,%options) {
     $options{browser}    //= '';
     $options{headless}   //= 1;
     $options{normalize}  //= 1;
+    $options{fatal}      //= 1;
 
     #create client_dir and log-dir
     my $dir = File::Spec->catdir( $options{client_dir},"perl-client" );
@@ -469,7 +476,12 @@ sub _request($self, $method, %params) {
     my $normal = $res->{content};
     $normal = NFC( $normal ) if $self->{normalize};
     my $decoded_content = eval { JSON::MaybeXS->new()->utf8()->decode( $normal ) };
-    confess "$res->{reason} :\n Consult $subject->{href}\nRaw Error:\n$res->{content}\n" unless $res->{success};
+
+    if ($self->{fatal}) {
+        confess "$res->{reason} :\n Consult $subject->{href}\nRaw Error:\n$res->{content}\n" unless $res->{success};
+    } else {
+        cluck "$res->{reason} :\n Consult $subject->{href}\nRaw Error:\n$res->{content}\n" unless $res->{success};
+    }
 
     if (grep { $method eq $_ } @no_process) {
         return @{$decoded_content->{value}} if ref $decoded_content->{value} eq 'ARRAY';
