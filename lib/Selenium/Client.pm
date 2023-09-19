@@ -159,12 +159,14 @@ sub new($class,%options) {
     $options{headless}   //= 1;
     $options{normalize}  //= 1;
     $options{fatal}      //= 1;
+    # Use the hardcoded JSON version of the stable spec in Selenium::Specification's DATA section.
+    $options{hardcode}   //= 1;
 
     #create client_dir and log-dir
     my $dir = File::Spec->catdir( $options{client_dir},"perl-client" );
     make_path($dir);
     #Grab the spec
-    $options{spec}= Selenium::Specification::read($options{client_dir},$options{version},$options{nofetch});
+    $options{spec}= Selenium::Specification::read($options{client_dir},$options{version},$options{nofetch}, $options{hardcode});
 
     my $self = bless(\%options, $class);
     $self->{sessions} = [];
