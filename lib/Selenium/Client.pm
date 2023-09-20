@@ -294,6 +294,7 @@ sub _build_caps($self,%options) {
 
 sub _build_subs($self) {
     foreach my $sub (keys(%{$self->{spec}})) {
+        print "Installing $self->{spec}{$sub}{uri} as $self->{spec}{$sub}{name}\n" if $self->{debug};
         Sub::Install::install_sub(
             {
                 code => sub {
@@ -364,15 +365,6 @@ sub DESTROY($self) {
 
     local $?; # Avoid affecting the exit status
 
-    print "Shutting down active sessions...\n" if $self->{debug};
-    #murder all sessions we spawned so that die() cleans up properly
-    if ($self->{ua} && @{$self->{sessions}}) {
-        foreach my $session (@{$self->{sessions}}) {
-            # An attempt was made.  The session *might* already be dead.
-            eval { $self->DeleteSession( sessionid => $session ) };
-        }
-    }
-
     #Kill the server if we spawned one
     return unless $self->{pid};
     print "Attempting to kill server process...\n" if $self->{debug};
@@ -418,7 +410,7 @@ sub _is_windows {
 our @bad_methods = qw{AcceptAlert DismissAlert Back Forward Refresh ElementClick MaximizeWindow MinimizeWindow FullscreenWindow SwitchToParentFrame ElementClear};
 
 #Exempt some calls from return processing
-our @no_process = qw{Status GetWindowRect GetElementRect GetAllCookies};
+our @no_process = qw{Status GetAlertText GetTimeouts GetWindowRect GetElementRect GetAllCookies};
 
 sub _request($self, $method, %params) {
     my $subject = $self->{spec}->{$method};
@@ -447,7 +439,8 @@ sub _request($self, $method, %params) {
     #If we have no extra params, and this is getSession, simplify
     %params = $self->_build_caps() if $method eq 'NewSession' && !%params;
 
-    foreach my $param (keys(%params)) {
+    my @needed_params = $subject->{uri} =~ m/\{(\w+)\}/g;
+    foreach my $param (@needed_params) {
         confess "$param is required for $method" unless exists $params{$param};
         delete $params{$param} if $url =~ s/{\Q$param\E}/$params{$param}/g;
     }
@@ -487,10 +480,18 @@ sub _request($self, $method, %params) {
         cluck "$res->{reason} :\n Consult $subject->{href}\nRaw Error:\n$res->{content}\n" unless $res->{success};
     }
 
+    #XXX should be caught below by objectify
     if (grep { $method eq $_ } @no_process) {
-        return @{$decoded_content->{value}} if ref $decoded_content->{value} eq 'ARRAY';
+        if (ref $decoded_content->{value} eq 'ARRAY') {
+            return wantarray ? @{$decoded_content->{value}} : $decoded_content->{value};
+        }
         return $decoded_content->{value};
     }
+    #XXX sigh
+    if ($decoded_content->{sessionId}) {
+        $decoded_content->{value} = [{ capabilities => $decoded_content->{value} }, { sessionId => $decoded_content->{sessionId} }];
+    }
+
     return $self->_objectify($decoded_content,$inject);
 }
 
@@ -500,7 +501,7 @@ our %classes = (
         class => 'Selenium::Session',
         destroy_callback => sub {
                 my $self = shift;
-                $self->DeleteSession() unless $self->{deleted};
+                $self->DeleteSession( sessionid => $self->{sessionid} ) unless $self->{deleted};
         },
         callback => sub {
             my ($self,$call) = @_;
@@ -521,10 +522,11 @@ sub _objectify($self,$result,$inject) {
     my @objs;
     foreach my $to_objectify (@$subject) {
         # If we have just data return it
-        return @$subject if ref $to_objectify ne 'HASH';
+        return wantarray ? @$subject : $subject if ref $to_objectify ne 'HASH';
 
         my @objects = keys(%$to_objectify);
         foreach my $object (@objects) {
+
             my $has_class = exists $classes{$object};
 
             my $base_object = $inject // {};
@@ -536,13 +538,13 @@ sub _objectify($self,$result,$inject) {
                 $to_objectify;
             $to_push->{sortField} = lc($object);
             # Save sessions for destructor
-            push(@{$self->{sessions}}, $to_push->{sessionid}) if ref $to_push eq 'Selenium::Session';
+            push(@{$self->{sessions}}, $to_push->session_id) if ref $to_push eq 'Selenium::Session';
             push(@objs,$to_push);
         }
     }
     @objs = sort { $a->{sortField} cmp $b->{sortField} } @objs;
     return $objs[0] if @objs == 1;
-    return @objs;
+    return wantarray ? @objs : \@objs;
 }
 
 1;
@@ -575,6 +577,17 @@ package Selenium::Capabilities;
 use parent qw{Selenium::Subclass};
 1;
 package Selenium::Session;
+
+sub session_id {
+    my $self = shift;
+    return $self->{sessionId} // $self->{sessionid};
+}
+
+sub DESTROY {
+    my $self = shift;
+    return if $self->{deleted};
+    $self->DeleteSession( sessionid => $self->session_id );
+}
 
 use parent qw{Selenium::Subclass};
 1;
