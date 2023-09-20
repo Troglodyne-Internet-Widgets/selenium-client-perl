@@ -491,6 +491,10 @@ sub _request($self, $method, %params) {
         return @{$decoded_content->{value}} if ref $decoded_content->{value} eq 'ARRAY';
         return $decoded_content->{value};
     }
+    #XXX sigh
+    if ($decoded_content->{sessionId}) {
+        $decoded_content->{value} = [{ capabilities => $decoded_content->{value} }, { sessionId => $decoded_content->{sessionId} }];
+    }
     return $self->_objectify($decoded_content,$inject);
 }
 
@@ -525,6 +529,8 @@ sub _objectify($self,$result,$inject) {
 
         my @objects = keys(%$to_objectify);
         foreach my $object (@objects) {
+
+            print "OBJECTIFYING $object\n";
             my $has_class = exists $classes{$object};
 
             my $base_object = $inject // {};
@@ -536,7 +542,7 @@ sub _objectify($self,$result,$inject) {
                 $to_objectify;
             $to_push->{sortField} = lc($object);
             # Save sessions for destructor
-            push(@{$self->{sessions}}, $to_push->{sessionid}) if ref $to_push eq 'Selenium::Session';
+            push(@{$self->{sessions}}, $to_push->session_id) if ref $to_push eq 'Selenium::Session';
             push(@objs,$to_push);
         }
     }
@@ -575,6 +581,11 @@ package Selenium::Capabilities;
 use parent qw{Selenium::Subclass};
 1;
 package Selenium::Session;
+
+sub session_id {
+    my $self = shift;
+    return $self->{sessionId};
+}
 
 use parent qw{Selenium::Subclass};
 1;
