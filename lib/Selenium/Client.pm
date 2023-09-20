@@ -161,6 +161,7 @@ sub new($class,%options) {
     $options{fatal}      //= 1;
     # Use the hardcoded JSON version of the stable spec in Selenium::Specification's DATA section.
     $options{hardcode}   //= 1;
+    $options{capabilities} //= {};
 
     #create client_dir and log-dir
     my $dir = File::Spec->catdir( $options{client_dir},"perl-client" );
@@ -271,6 +272,7 @@ sub _build_caps($self,%options) {
 
     my $c = {
         browserName  => $options{browser},
+        %{$self->{capabilities}},
     };
     my $browser = $browser_opts{$options{browser}};
 
