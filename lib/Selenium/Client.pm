@@ -368,6 +368,7 @@ sub DESTROY($self) {
     #murder all sessions we spawned so that die() cleans up properly
     if ($self->{ua} && @{$self->{sessions}}) {
         foreach my $session (@{$self->{sessions}}) {
+            next unless $session;
             # An attempt was made.  The session *might* already be dead.
             eval { $self->DeleteSession( sessionid => $session ) };
         }
@@ -449,6 +450,8 @@ sub _request($self, $method, %params) {
 
     foreach my $param (keys(%params)) {
         confess "$param is required for $method" unless exists $params{$param};
+        use Data::Dumper;
+        print Dumper(\%params, $url);
         delete $params{$param} if $url =~ s/{\Q$param\E}/$params{$param}/g;
     }
 
@@ -504,7 +507,7 @@ our %classes = (
         class => 'Selenium::Session',
         destroy_callback => sub {
                 my $self = shift;
-                $self->DeleteSession() unless $self->{deleted};
+                $self->DeleteSession( sessionid => $self->{sessionid} ) unless $self->{deleted};
         },
         callback => sub {
             my ($self,$call) = @_;

@@ -14,7 +14,6 @@ use Selenium::Client::WDKeys;
 #TODO: cover new_from_caps
 #TODO: Selenium::Firefox::Profile usage
 
-$Selenium::Client::Driver::FORCE_WD3 = 1;
 my $driver = Selenium::Client::Driver->new(
     remote_server_addr => 'localhost',
     port => 4444,
@@ -54,6 +53,9 @@ SKIP: {
     is($timeouts->{script},20000,"WD3 shim for set_async timeouts works");
     is($timeouts->{implicit},5000,"WD3 shim for implicit timeouts works");
 }
+
+$driver->quit();
+die;
 
 my $loc = abs_path("$FindBin::Bin/test.html");
 ok($driver->get("file://$loc"),"Can load a web page (WD3)");

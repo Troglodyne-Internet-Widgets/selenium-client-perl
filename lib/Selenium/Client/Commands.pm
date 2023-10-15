@@ -84,9 +84,9 @@ my %command_map = (
     },
     #TODO murder the driver object too
     'quit' => {
-        execute => sub { 
+        execute => sub {
             my ($session, $params) = @_;
-            return $session->DeleteSession( %$params );
+            return $session->DeleteSession( sessionid => $session->{sessionid} );
         },
         parse   => \&_emit_null_ok,
     },
