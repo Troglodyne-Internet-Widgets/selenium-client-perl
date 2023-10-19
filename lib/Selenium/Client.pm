@@ -364,16 +364,6 @@ sub DESTROY($self) {
 
     local $?; # Avoid affecting the exit status
 
-    print "Shutting down active sessions...\n" if $self->{debug};
-    #murder all sessions we spawned so that die() cleans up properly
-    if ($self->{ua} && @{$self->{sessions}}) {
-        foreach my $session (@{$self->{sessions}}) {
-            next unless $session;
-            # An attempt was made.  The session *might* already be dead.
-            eval { $self->DeleteSession( sessionid => $session ) };
-        }
-    }
-
     #Kill the server if we spawned one
     return unless $self->{pid};
     print "Attempting to kill server process...\n" if $self->{debug};
@@ -587,7 +577,13 @@ package Selenium::Session;
 
 sub session_id {
     my $self = shift;
-    return $self->{sessionId};
+    return $self->{sessionId} // $self->{sessionid};
+}
+
+sub DESTROY {
+    my $self = shift;
+    return if $self->{deleted};
+    $self->DeleteSession( sessionid => $self->session_id );
 }
 
 use parent qw{Selenium::Subclass};

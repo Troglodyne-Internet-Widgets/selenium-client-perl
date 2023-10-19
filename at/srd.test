@@ -54,9 +54,6 @@ SKIP: {
     is($timeouts->{implicit},5000,"WD3 shim for implicit timeouts works");
 }
 
-$driver->quit();
-die;
-
 my $loc = abs_path("$FindBin::Bin/test.html");
 ok($driver->get("file://$loc"),"Can load a web page (WD3)");
 
