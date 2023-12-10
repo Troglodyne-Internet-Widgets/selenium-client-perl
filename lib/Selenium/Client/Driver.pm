@@ -274,6 +274,7 @@ sub _execute_command($self, $res, $params={}) {
 }
 
 sub new_session($self, $extra_capabilities={}) {
+    $extra_capabilities //= {};
     my $caps = {
         'platformName'         => $self->platform,
         #'javascriptEnabled'    => $self->javascript,
