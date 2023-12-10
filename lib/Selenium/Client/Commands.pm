@@ -53,7 +53,7 @@ my %command_map = (
                 delete $params->{$key} unless $params->{$key};
             }
 
-            my %in = %$params ? ( desiredCapabilities => $params ) : ();
+            my %in = %$params ? ( capabilities => { alwaysMatch => $params } ) : ();
             my @ret = $driver->NewSession( %in );
             return [@ret];
         },
@@ -365,7 +365,12 @@ my %command_map = (
         execute => \&_toughshit,
     },
     'getAlertText' => {
-        execute => \&_sess_uc,
+        execute => sub {
+            #XXX this gives you a 404...but the actual answer we want in the friggin' body. AMAZING!
+            return eval {
+                _sess_uc(@_)
+            };
+        },
         parse   => \&_emit,
     },
     'sendKeysToPrompt' => {

@@ -294,6 +294,7 @@ sub _build_caps($self,%options) {
 
 sub _build_subs($self) {
     foreach my $sub (keys(%{$self->{spec}})) {
+        print "Installing $self->{spec}{$sub}{uri} as $self->{spec}{$sub}{name}\n" if $self->{debug};
         Sub::Install::install_sub(
             {
                 code => sub {
