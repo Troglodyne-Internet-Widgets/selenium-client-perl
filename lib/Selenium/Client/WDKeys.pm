@@ -147,7 +147,7 @@ use constant KEYS => {
     'f12'            => "\N{U+E03C}",
     'command_meta'   => "\N{U+E03D}",
     'ZenkakuHankaku' => "\N{U+E040}",    #Asian language keys, maybe altGr too?
-      #There are other code points for say, left versus right meta/shift/alt etc, but I don't seriously believe anyone uses that level of sophistication on the web yet.
+                                         #There are other code points for say, left versus right meta/shift/alt etc, but I don't seriously believe anyone uses that level of sophistication on the web yet.
 };
 
 our @EXPORT = ('KEYS');

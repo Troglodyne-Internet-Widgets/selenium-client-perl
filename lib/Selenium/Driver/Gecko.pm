@@ -28,14 +28,14 @@ All driver classes must build this.
 
 =cut
 
-sub build_spawn_opts($class,$object) {
-    $object->{driver_class}       = $class;
-    $object->{driver_version}     //= '';
-    $object->{log_file}           //= "$object->{client_dir}/perl-client/selenium-$object->{port}.log";
+sub build_spawn_opts ( $class, $object ) {
+    $object->{driver_class} = $class;
+    $object->{driver_version} //= '';
+    $object->{log_file}       //= "$object->{client_dir}/perl-client/selenium-$object->{port}.log";
     $object->{driver_file} = File::Which::which('geckodriver');
     die "Could not find driver!" unless $object->{driver_file};
 
-    my @config = ('--port', $object->{port});
+    my @config = ( '--port', $object->{port} );
 
     # Build command string
     $object->{command} //= [

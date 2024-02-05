@@ -7,34 +7,33 @@ use Carp::Always;
 
 # Polyfill from Selenium 4's spec to JSONWire + Selenium 3
 my %using = (
-    'class name' => sub { ("css selector", ".$_[0]") },
-    'name'       => sub { ("css selector", "[name='$_[0]']") },
-    'id'         => sub { ("css selector", "#$_[0]") },
+    'class name' => sub { ( "css selector", ".$_[0]" ) },
+    'name'       => sub { ( "css selector", "[name='$_[0]']" ) },
+    'id'         => sub { ( "css selector", "#$_[0]" ) },
 );
 
-
 sub _toughshit {
-    my ($session, $params, $cmd) = @_;
-    die "Sorry, Selenium 4 does not support $cmd!  Try downgrading your browser, driver binary, Selenium JAR and so forth to something that understands JSONWire protocol, Selenium 3, or use playwright which supports all this functionality and more."
+    my ( $session, $params, $cmd ) = @_;
+    die "Sorry, Selenium 4 does not support $cmd!  Try downgrading your browser, driver binary, Selenium JAR and so forth to something that understands JSONWire protocol, Selenium 3, or use playwright which supports all this functionality and more.";
 }
 
 sub _emit {
-    my ($session, $ret) = @_;
+    my ( $session, $ret ) = @_;
     return $ret;
 }
+
 sub _emit_null_ok {
-    my ($session, $ret) = @_;
+    my ( $session, $ret ) = @_;
     return !defined $ret;
 }
 
-
 sub _timeout {
-    my ($session, $params) = @_;
+    my ( $session, $params ) = @_;
     return $session->SetTimeouts(%$params);
 }
 
 sub _sess_uc {
-    my ($session, $params, $cmd) = @_;
+    my ( $session, $params, $cmd ) = @_;
     $cmd = ucfirst($cmd);
     die "NO SESSION PROVIDED!" unless $session;
     return $session->$cmd(%$params);
@@ -42,32 +41,33 @@ sub _sess_uc {
 
 my %command_map = (
     'status' => {
-        driver => 1,
+        driver  => 1,
         execute => sub {
-            my ($driver,$params) = @_;
+            my ( $driver, $params ) = @_;
             return $driver->Status();
         },
-        parse  => sub {
-            my ($driver, $ret) = @_;
+        parse => sub {
+            my ( $driver, $ret ) = @_;
             return $ret;
         },
     },
     'newSession' => {
-        driver => 1,
+        driver  => 1,
         execute => sub {
-            my ($driver, $params) = @_;
-            foreach my $key (keys(%$params)) {
+            my ( $driver, $params ) = @_;
+            foreach my $key ( keys(%$params) ) {
+
                 #XXX may not be the smartest idea
                 delete $params->{$key} unless $params->{$key};
             }
 
-            my %in = %$params ? ( capabilities => { alwaysMatch => $params } ) : ();
-            my @ret = $driver->NewSession( %in );
+            my %in  = %$params ? ( capabilities => { alwaysMatch => $params } ) : ();
+            my @ret = $driver->NewSession(%in);
             return [@ret];
         },
         parse => sub {
-            my ($driver, $ret) = @_;
-            my ($capabilities, $session) = @$ret;
+            my ( $driver,       $ret )     = @_;
+            my ( $capabilities, $session ) = @$ret;
             return { capabilities => $capabilities, session => $session };
         },
     },
@@ -84,45 +84,47 @@ my %command_map = (
         parse   => \&_emit,
     },
     'getTimeouts' => {
-        execute => sub { 
-            my ($session, $params) = @_;
+        execute => sub {
+            my ( $session, $params ) = @_;
             return $session->GetTimeouts();
         },
-        parse   => \&_emit,
+        parse => \&_emit,
     },
+
     #TODO murder the driver object too
     'quit' => {
         execute => sub {
-            my ($session, $params) = @_;
+            my ( $session, $params ) = @_;
             return $session->DeleteSession( sessionid => $session->{sessionid} );
         },
-        parse   => \&_emit_null_ok,
+        parse => \&_emit_null_ok,
     },
     'getCurrentWindowHandle' => {
         execute => sub {
-            my ($session, $params) = @_;
-            return $session->GetWindowHandle( %$params );
+            my ( $session, $params ) = @_;
+            return $session->GetWindowHandle(%$params);
         },
-        parse   => \&_emit,
+        parse => \&_emit,
     },
     'getWindowHandles' => {
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
+
     #TODO May require output filtering
     'getWindowSize' => {
         execute => sub {
-            my ($session, $params) = @_;
-            return $session->GetWindowRect( %$params );
+            my ( $session, $params ) = @_;
+            return $session->GetWindowRect(%$params);
         },
-        parse   => \&_emit,
+        parse => \&_emit,
     },
     'getWindowPosition' => {
         execute => sub {
-            my ($session, $params) = @_;
-            return $session->GetWindowRect( %$params );
+            my ( $session, $params ) = @_;
+            return $session->GetWindowRect(%$params);
         },
-        parse   => \&_emit,
+        parse => \&_emit,
     },
     'getWindowRect' => {
         execute => \&_sess_uc,
@@ -150,45 +152,45 @@ my %command_map = (
     },
     'setWindowSize' => {
         execute => sub {
-            my ($session, $params) = @_;
-            return $session->SetWindowRect( %$params );
+            my ( $session, $params ) = @_;
+            return $session->SetWindowRect(%$params);
         },
-        parse   => \&_emit_null_ok,
+        parse => \&_emit_null_ok,
     },
     'setWindowPosition' => {
         execute => sub {
-            my ($session, $params) = @_;
-            return $session->SetWindowRect( %$params );
+            my ( $session, $params ) = @_;
+            return $session->SetWindowRect(%$params);
         },
-        parse   => \&_emit_null_ok,
+        parse => \&_emit_null_ok,
     },
     'getCurrentUrl' => {
         execute => sub {
-            my ($session, $params) = @_;
-            return $session->GetCurrentURL( %$params );
+            my ( $session, $params ) = @_;
+            return $session->GetCurrentURL(%$params);
         },
-        parse   => \&_emit,
+        parse => \&_emit,
     },
     'get' => {
-        execute => sub { 
-            my ($session, $params) = @_;
-            return $session->NavigateTo( %$params );
+        execute => sub {
+            my ( $session, $params ) = @_;
+            return $session->NavigateTo(%$params);
         },
-        parse   => \&_emit_null_ok,
+        parse => \&_emit_null_ok,
     },
     'goForward' => {
-        execute => sub { 
-            my ($session, $params) = @_;
-            return $session->Forward( %$params );
+        execute => sub {
+            my ( $session, $params ) = @_;
+            return $session->Forward(%$params);
         },
-        parse   => \&_emit_null_ok,
+        parse => \&_emit_null_ok,
     },
     'goBack' => {
-        execute => sub { 
-            my ($session, $params) = @_;
-            return $session->Back( %$params );
+        execute => sub {
+            my ( $session, $params ) = @_;
+            return $session->Back(%$params);
         },
-        parse   => \&_emit_null_ok,
+        parse => \&_emit_null_ok,
     },
     'refresh' => {
         execute => \&_sess_uc,
@@ -204,7 +206,7 @@ my %command_map = (
     },
     'screenshot' => {
         execute => sub {
-            my ($session, $params) = @_;
+            my ( $session, $params ) = @_;
             $session->TakeScreenshot(%$params);
         },
         parse => \&_emit,
@@ -212,7 +214,7 @@ my %command_map = (
     'elementScreenshot' => {
         session => 1,
         execute => sub {
-            my ($session, $params) = @_;
+            my ( $session, $params ) = @_;
             $session->TakeElementScreenshot(%$params);
         },
         parse => \&_emit,
@@ -237,11 +239,11 @@ my %command_map = (
         parse   => \&_emit,
     },
     'getCookieNamed' => {
-        execute => sub { 
-            my ($session, $params) = @_;
+        execute => sub {
+            my ( $session, $params ) = @_;
             return $session->GetNamedCookie(%$params);
         },
-        parse   => \&_emit,
+        parse => \&_emit,
     },
     'addCookie' => {
         execute => \&_sess_uc,
@@ -253,7 +255,7 @@ my %command_map = (
     },
     'deleteCookieNamed' => {
         execute => sub {
-            my ($session, $params) = @_;
+            my ( $session, $params ) = @_;
             return $session->DeleteCookie(%$params);
         },
         parse => \&_emit,
@@ -267,23 +269,25 @@ my %command_map = (
         parse   => \&_emit,
     },
     'findElement' => {
-        scd => 1,
+        scd     => 1,
         execute => sub {
-            my ($driver, $params) = @_;
+            my ( $driver, $params ) = @_;
+
             # Fix old selector types
-            ($params->{using}, $params->{value})  = $using{$params->{using}}->($params->{value}) if exists $using{$params->{using}};
-            my $element = $driver->session->FindElement( %$params );
+            ( $params->{using}, $params->{value} ) = $using{ $params->{using} }->( $params->{value} ) if exists $using{ $params->{using} };
+            my $element = $driver->session->FindElement(%$params);
             return $element;
         },
         parse => \&_emit,
     },
     'findElements' => {
-        scd => 1,
+        scd     => 1,
         execute => sub {
-            my ($driver, $params) = @_;
+            my ( $driver, $params ) = @_;
+
             # Fix old selector types
-            ($params->{using}, $params->{value})  = $using{$params->{using}}->($params->{value}) if exists $using{$params->{using}};
-            my @elements = $driver->session->FindElements( %$params );
+            ( $params->{using}, $params->{value} ) = $using{ $params->{using} }->( $params->{value} ) if exists $using{ $params->{using} };
+            my @elements = $driver->session->FindElements(%$params);
             return wantarray ? @elements : \@elements;
         },
         parse => \&_emit,
@@ -303,18 +307,19 @@ my %command_map = (
     },
     'clickElement' => {
         execute => sub {
-            my ($element, $params) = @_;
-            $element->ElementClick( %$params );
+            my ( $element, $params ) = @_;
+            $element->ElementClick(%$params);
         },
         parse => \&_emit_null_ok,
     },
+
     # TODO polyfill as send enter?
     'submitElement' => {
         execute => \&_toughshit,
     },
     'sendKeysToElement' => {
         execute => sub {
-            my ($element, $params) = @_;
+            my ( $element, $params ) = @_;
             $element->ElementSendKeys(%$params);
         },
         parse => \&_emit,
@@ -329,6 +334,7 @@ my %command_map = (
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
+
     # TODO polyfill
     'setElementSelected' => {
         execute => \&_toughshit,
@@ -343,10 +349,10 @@ my %command_map = (
     },
     'getElementLocation' => {
         execute => sub {
-            my ($element, $params) = @_;
+            my ( $element, $params ) = @_;
             return $element->GetElementRect(%$params);
         },
-        parse  => \&_emit,
+        parse => \&_emit,
     },
     'getElementRect' => {
         execute => \&_sess_uc,
@@ -361,10 +367,10 @@ my %command_map = (
     },
     'clearElement' => {
         execute => sub {
-            my ($element, $params) = @_;
-            return $element->ElementClear( %$params );
+            my ( $element, $params ) = @_;
+            return $element->ElementClear(%$params);
         },
-        parse   => \&_emit,
+        parse => \&_emit,
     },
     'getElementAttribute' => {
         execute => \&_sess_uc,
@@ -374,6 +380,7 @@ my %command_map = (
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
+
     # TODO polyfills
     'elementEquals' => {
         execute => \&_toughshit,
@@ -383,17 +390,17 @@ my %command_map = (
     },
     'close' => {
         execute => sub {
-            my ($session, $params) = @_;
+            my ( $session, $params ) = @_;
             $session->closeWindow(%$params);
         },
-        parse   => \&_emit_null_ok,
+        parse => \&_emit_null_ok,
     },
     'getElementSize' => {
         execute => sub {
-            my ($element, $params) = @_;
+            my ( $element, $params ) = @_;
             return $element->GetElementRect(%$params);
         },
-        parse  => \&_emit,
+        parse => \&_emit,
     },
     'getElementText' => {
         execute => \&_sess_uc,
@@ -401,7 +408,7 @@ my %command_map = (
     },
     'getElementValueOfCssProperty' => {
         execute => sub {
-            my ($element, $params) = @_;
+            my ( $element, $params ) = @_;
             return $element->GetElementCSSValue(%$params);
         },
         parse => \&_emit,
@@ -410,13 +417,13 @@ my %command_map = (
         execute => \&_toughshit,
     },
     'getAlertText' => {
-        execute => \&_sess_uc, 
+        execute => \&_sess_uc,
         parse   => \&_emit,
     },
     'sendKeysToPrompt' => {
         execute => sub {
-            my ($session, $params) = @_;
-            $session->SendAlertText( %$params);
+            my ( $session, $params ) = @_;
+            $session->SendAlertText(%$params);
         },
         parse => \&_emit_null_ok,
     },
@@ -489,7 +496,7 @@ my %command_map = (
     generalAction => {
         session => 1,
         execute => sub {
-            my ($session, $params) = @_;
+            my ( $session, $params ) = @_;
             return $session->PerformActions(%$params);
         },
         parse => \&_emit_null_ok,
@@ -497,7 +504,7 @@ my %command_map = (
     releaseGeneralAction => {
         session => 1,
         execute => sub {
-            my ($session, $params) = @_;
+            my ( $session, $params ) = @_;
             return $session->ReleaseActions(%$params);
         },
         parse => \&_emit_null_ok,
@@ -506,29 +513,29 @@ my %command_map = (
 
 sub new {
     my $class = shift;
-    return bless({}, $class);
+    return bless( {}, $class );
 }
 
 # Act like S::R::C
 sub parse_response {
-    my ($self, $driver, $command, $response) = @_;
-    return $command_map{$command}{parse}->($driver,$response);
+    my ( $self, $driver, $command, $response ) = @_;
+    return $command_map{$command}{parse}->( $driver, $response );
 }
 
 # Act like S::R::RR
 sub request {
-    my ($self, $driver, $command, $args) = @_;
+    my ( $self, $driver, $command, $args ) = @_;
     die "No such command $command" unless ref $command_map{$command} eq 'HASH';
-    return $command_map{$command}{execute}->($driver, $args, $command);
+    return $command_map{$command}{execute}->( $driver, $args, $command );
 }
 
 sub needs_driver {
-    my ($self,$command) = @_;
+    my ( $self, $command ) = @_;
     return $command_map{$command}{driver};
 }
 
 sub needs_scd {
-    my ($self, $command) = @_;
+    my ( $self, $command ) = @_;
     return $command_map{$command}{scd};
 }
 

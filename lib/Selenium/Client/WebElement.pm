@@ -22,38 +22,39 @@ See the documentation for L<Selenium::Remote::WebElement> for details about meth
 
 =cut
 
-sub _param ($self, $default, $param, $value=undef) {
+sub _param ( $self, $default, $param, $value = undef ) {
     $self->{$param} //= $default;
     $self->{$param} = $value if defined $value;
     return $self->{$param};
 }
 
-sub element($self, $element=undef) {
-    return $self->_param(undef, 'element', $element);
+sub element ( $self, $element = undef ) {
+    return $self->_param( undef, 'element', $element );
 }
 
-sub driver($self, $driver=undef) {
-    return $self->_param(undef, 'driver', $driver);
+sub driver ( $self, $driver = undef ) {
+    return $self->_param( undef, 'driver', $driver );
 }
 
-sub session($self, $session=undef) {
-    return $self->_param(undef, 'session', $session);
+sub session ( $self, $session = undef ) {
+    return $self->_param( undef, 'session', $session );
 }
 
-sub new($class,%options) {
-    my $self = bless($options{id}, $class);
-    $self->id($self->{elementid});
-    $self->driver($options{driver});
-    $self->session($options{driver}->session);
+sub new ( $class, %options ) {
+    my $self = bless( $options{id}, $class );
+    $self->id( $self->{elementid} );
+    $self->driver( $options{driver} );
+    $self->session( $options{driver}->session );
     return $self;
 }
 
-sub id ($self,$value=undef) {
-    return $self->_param(undef, 'id', $value);
+sub id ( $self, $value = undef ) {
+    return $self->_param( undef, 'id', $value );
 }
 
 # We need to inject the element ID due to this nonstandard wrapper.
-sub _execute_command($self, $res, $params={}) {
+sub _execute_command ( $self, $res, $params = {} ) {
+
     #XXX sigh, some day spec authors will stop LYING
     $params->{propertyname} //= delete $params->{property_name} // delete $res->{property_name};
 
@@ -61,7 +62,7 @@ sub _execute_command($self, $res, $params={}) {
         %$params,
         elementid => $self->id,
     };
-    return $self->driver->_execute_command($res, $params_modified);
+    return $self->driver->_execute_command( $res, $params_modified );
 }
 
 1;
