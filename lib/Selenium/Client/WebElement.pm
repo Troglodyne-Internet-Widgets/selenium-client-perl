@@ -41,13 +41,27 @@ sub session($self, $session=undef) {
 }
 
 sub new($class,%options) {
-    my $self = bless(\%options, $class);
-    $self->id($self->element->{'element-6066-11e4-a52e-4f735466cecf'});
+    my $self = bless($options{id}, $class);
+    $self->id($self->{elementid});
+    $self->driver($options{driver});
+    $self->session($options{driver}->session);
     return $self;
 }
 
 sub id ($self,$value=undef) {
     return $self->_param(undef, 'id', $value);
+}
+
+# We need to inject the element ID due to this nonstandard wrapper.
+sub _execute_command($self, $res, $params={}) {
+    #XXX sigh, some day spec authors will stop LYING
+    $params->{propertyname} //= delete $params->{property_name} // delete $res->{property_name};
+
+    my $params_modified = {
+        %$params,
+        elementid => $self->id,
+    };
+    return $self->driver->_execute_command($res, $params_modified);
 }
 
 1;

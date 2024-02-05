@@ -439,7 +439,8 @@ sub _request($self, $method, %params) {
     #If we have no extra params, and this is getSession, simplify
     %params = $self->_build_caps() if $method eq 'NewSession' && !%params;
 
-    foreach my $param (keys(%params)) {
+    my @needed_params = $subject->{uri} =~ m/\{(\w+)\}/g;
+    foreach my $param (@needed_params) {
         confess "$param is required for $method" unless exists $params{$param};
         delete $params{$param} if $url =~ s/{\Q$param\E}/$params{$param}/g;
     }
@@ -519,7 +520,7 @@ sub _objectify($self,$result,$inject) {
     my @objs;
     foreach my $to_objectify (@$subject) {
         # If we have just data return it
-        return $subject if ref $to_objectify ne 'HASH';
+        return wantarray ? @$subject : $subject if ref $to_objectify ne 'HASH';
 
         my @objects = keys(%$to_objectify);
         foreach my $object (@objects) {
@@ -541,7 +542,7 @@ sub _objectify($self,$result,$inject) {
     }
     @objs = sort { $a->{sortField} cmp $b->{sortField} } @objs;
     return $objs[0] if @objs == 1;
-    return @objs;
+    return wantarray ? @objs : \@objs;
 }
 
 1;

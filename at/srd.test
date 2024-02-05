@@ -86,6 +86,7 @@ alertify();
 #TODO execute_*_script testing
 
 ok($driver->screenshot(),"can get base64'd whole page screenshot (WD3)");
+my $lem = $driver->find_element('body', 'tag_name');
 ok($driver->find_element('body','tag_name')->screenshot(0),"can get element screenshot (WD3 ONLY) and find_element (WD3) works.");
 
 isa_ok($driver->find_element('red','class'),"Selenium::Client::WebElement");
@@ -95,40 +96,52 @@ isa_ok($driver->find_element('Test', 'partial_link_text'),"Selenium::Client::Web
 
 is(scalar(@{$driver->find_elements('red','class')}),2,"can find multiple elements correctly");
 
-my $lem = $driver->find_element('body', 'tag_name');
-isa_ok($driver->find_child_element($lem, 'red','class'),"Selenium::Client::WebElement");
-isa_ok($lem->child('red','class'),"Selenium::Client::WebElement");
-isa_ok($driver->find_child_element($lem, 'text','name'),"Selenium::Client::WebElement");
-isa_ok($driver->find_child_element($lem, 'Test Link', 'link_text'),"Selenium::Client::WebElement");
-isa_ok($driver->find_child_element($lem, 'Test', 'partial_link_text'),"Selenium::Client::WebElement");
+SKIP: {
+    skip("Finding child elements is not supported by selenium 4, you will have to modify to use css selectors.", 7);
+    my $lem = $driver->find_element('body', 'tag_name');
+    isa_ok($driver->find_child_element($lem, 'red','class'),"Selenium::Client::WebElement");
+    isa_ok($lem->child('red','class'),"Selenium::Client::WebElement");
+    isa_ok($driver->find_child_element($lem, 'text','name'),"Selenium::Client::WebElement");
+    isa_ok($driver->find_child_element($lem, 'Test Link', 'link_text'),"Selenium::Client::WebElement");
+    isa_ok($driver->find_child_element($lem, 'Test', 'partial_link_text'),"Selenium::Client::WebElement");
 
-$lem = $driver->find_element('form','tag_name');
-is(scalar(@{$driver->find_child_elements($lem,'./*')}),6,"can find child elements (WD3)");
-is(scalar(@{$lem->children('./*')}),6,"can find child elements via children() alias (WD3)");
+    $lem = $driver->find_element('form','tag_name');
+    is(scalar(@{$driver->find_child_elements($lem,'./*')}),6,"can find child elements (WD3)");
+    is(scalar(@{$lem->children('./*')}),6,"can find child elements via children() alias (WD3)");
+}
 
 isa_ok($driver->get_active_element(),"Selenium::Client::WebElement");
 
-like(exception { $driver->cache_status() },qr/unknown command/, "cache_status unimplemented in WD3");
-like(exception {
-diag explain $driver->set_geolocation(location => {
-       latitude  => 40.714353,
-       longitude => -74.005973,
-       altitude  => 0.056747
-});
-}, qr/unknown command/, "set_geolocation unimplemented in WD3");
-like(exception { $driver->get_geolocation() }, qr/unknown command/, "get_geolocation unimplemented in WD3");
+SKIP: {
+    skip("Geolocation, cache status, server logs and orientation commands have been unimplemented since webdriver2", 7);
+    like(exception { $driver->cache_status() },qr/unknown command/, "cache_status unimplemented in WD3");
+    like(exception {
+    diag explain $driver->set_geolocation(location => {
+           latitude  => 40.714353,
+           longitude => -74.005973,
+           altitude  => 0.056747
+    });
+    }, qr/unknown command/, "set_geolocation unimplemented in WD3");
+    like(exception { $driver->get_geolocation() }, qr/unknown command/, "get_geolocation unimplemented in WD3");
 
-ok($driver->get_log('server'), "get_log fallback works");
-ok( scalar(@{$driver->get_log_types()}),"can fallback for get_log_types");
+    ok($driver->get_log('server'), "get_log fallback works");
+    ok( scalar(@{$driver->get_log_types()}),"can fallback for get_log_types");
 
-like(exception { $driver->set_orientation("LANDSCAPE") }, qr/unknown command/, "set_orientation unimplemented in WD3");
-like(exception { $driver->get_orientation() }, qr/unknown command/, "get_orientation unimplemented in WD3");
+    like(exception { $driver->set_orientation("LANDSCAPE") }, qr/unknown command/, "set_orientation unimplemented in WD3");
+    like(exception { $driver->get_orientation() }, qr/unknown command/, "get_orientation unimplemented in WD3");
+}
 
-like($driver->upload_file($otherloc),qr/other.html$/,"upload_file fallback works");
+SKIP: {
+    skip("UploadFile is not supported by Selenium 4.  This is basically a non-starter and makes this software a toy unsuitable for most testing purposes.", 1);
+    like($driver->upload_file($otherloc),qr/other.html$/,"upload_file fallback works");
+}
 
-#Jinkies, this stuff is cool, it prints the selenium server help page @_@
-like( exception { $driver->get_local_storage_item('whee') },qr/help/i,"get_local_storage_item prints help page");
-like( exception { $driver->delete_local_storage_item('whee') },qr/help/i,"get_local_storage_item prints help page");
+SKIP: {
+    skip("Local storage interrogation is not supported by selenium 4", 2);
+    #Jinkies, this stuff is cool, it prints the selenium server help page @_@
+    like( exception { $driver->get_local_storage_item('whee') },qr/help/i,"get_local_storage_item prints help page");
+    like( exception { $driver->delete_local_storage_item('whee') },qr/help/i,"get_local_storage_item prints help page");
+}
 
 ok($driver->switch_to_frame($driver->find_element('frame', 'id')),"can switch to frame (WD3)");
 ok($driver->switch_to_frame(),"can switch to parent frame (WD3 only)");
@@ -136,11 +149,8 @@ ok($driver->switch_to_frame(),"can switch to parent frame (WD3 only)");
 ok($driver->set_window_position(1,1),"can set window position (WD3)");
 ok($driver->set_window_size(640,480),"can set window size (WD3)");
 
-SKIP: {
-    skip(2, "maxi/mini not working right now?");
-    ok($driver->maximize_window(),"can maximize window (WD3)");
-    ok($driver->minimize_window(),"can minimize window (WD3 only)");
-}
+ok($driver->maximize_window(),"can maximize window (WD3)");
+ok($driver->minimize_window(),"can minimize window (WD3 only)");
 ok($driver->fullscreen_window(),"can fullscreen window (WD3 only)");
 
 is(scalar(@{$driver->get_all_cookies()}),1,"can get cookie list (WD3)");
@@ -194,7 +204,14 @@ is( $l2->is_enabled(),0,"is_enabled works (WD3)");
 ok( $l2->get_element_location()->{x},"Can get element rect (WD3)");
 ok( $l2->get_size()->{'height'}, "Size shim on rect works (WD3)");
 is( $l2->get_tag_name(),'input',"get_tag_name works (WD3)");
-ok( defined $l2->get_element_location_in_view()->{x}, "get_element_location_in_view polyfill works (WD3)");
+
+TODO: {
+    local $TODO = "Deranged behavior returning an ARRAY of DUPLICATE ENTRIES!!!";
+    my $liv = $l2->get_element_location_in_view();
+    fail("WHAT") if ref $liv eq 'ARRAY';
+    $liv = $liv->[0] if ref $liv eq 'ARRAY';
+    ok( defined $liv->{x}, "get_element_location_in_view polyfill works (WD3)");
+}
 
 is($driver->find_element('hidon','id')->is_displayed(),0,"is_displayed returns false for type=hidden elements");
 my $gone = $driver->find_element('no-see-em','id');
@@ -214,7 +231,14 @@ $driver->get('http://w3.org/History.html');
 $driver->add_cookie('foo','bar',undef,undef,0,0,time()+5000);
 is(scalar(@{$driver->get_all_cookies()}),1,"can set cookie (WD3)");
 
-is($driver->get_cookie_named('foo')->{value},'bar',"can get cookie by name (WD3 only)");
+#XXX same insane behavior with get_element_location_in_view
+TODO: {
+    local $TODO = "Yet more demented behavior of returning the same things multiple times in an array";
+    my $jar = $driver->get_cookie_named('foo');
+    fail("WHAT") if ref $jar eq 'ARRAY';
+    $jar = $jar->[0] if ref $jar eq 'ARRAY';
+    is($jar->{value},'bar',"can get cookie by name (WD3 only)");
+}
 
 $driver->delete_cookie_named('foo');
 is(scalar(@{$driver->get_all_cookies()}),0,"can delete named cookies (WD3)");
@@ -226,9 +250,8 @@ sub alertify {
     is(eval { $driver->get_alert_text() } // $@,'BEEE DOOO', "Can get alert text");
     is( exception { $driver->accept_alert() }, undef, "Can dismiss alert");
     is(eval { $driver->get_alert_text() } // $@,'Are you a fugitive from Justice?', "Can get alert text on subsequent alert");
-    is( exception { $driver->send_alert_text( text => "HORGLE") }, undef,"send_keys_to_prompt works");
+    is( exception { $driver->send_keys_to_prompt( "HORGLE" ) }, undef,"send_keys_to_prompt works");
     is( exception { $driver->dismiss_alert() }, undef, "Can accept alert");
 }
-
 
 done_testing();

@@ -260,8 +260,13 @@ sub DESTROY {
 sub _execute_command($self, $res, $params={}) {
     print "Executing $res->{command}\n" if $self->{debug};
 
+    #XXX Sometimes the params are in $res.  Whee.
+    foreach my $key (keys(%$res)) {
+        $params->{$key} = $res->{$key} unless grep { $key eq $_ } qw{command sessionid elementid};
+    }
+
     my $macguffin = $self->commands->needs_driver( $res->{command} )  ? $self->driver : $self->session;
-    $macguffin    = $self->commands->needs_element( $res->{command} ) ? $self->element : $macguffin;
+    $macguffin    = $self->commands->needs_scd( $res->{command} )     ? $self : $macguffin;
     die "Could not acquire driver/session!" unless $macguffin;
     local $@;
     #eval {
@@ -272,6 +277,8 @@ sub _execute_command($self, $res, $params={}) {
     #    die $@;
     #};
 }
+
+sub has_javascript { 1 }
 
 sub new_session($self, $extra_capabilities={}) {
     $extra_capabilities //= {};

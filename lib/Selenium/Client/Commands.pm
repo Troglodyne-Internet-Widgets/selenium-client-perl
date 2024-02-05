@@ -6,11 +6,16 @@ use warnings;
 use Carp::Always;
 
 # Polyfill from Selenium 4's spec to JSONWire + Selenium 3
+my %using = (
+    'class name' => sub { ("css selector", ".$_[0]") },
+    'name'       => sub { ("css selector", "[name='$_[0]']") },
+    'id'         => sub { ("css selector", "#$_[0]") },
+);
+
 
 sub _toughshit {
     my ($session, $params, $cmd) = @_;
-    # Maybe this is a bit on the nose? Should I tell them the truth (Selenium 4 is WORSE than its predecessors) and link to playwright.dev?
-    die "Sorry, Selenium 4 does not support $cmd!  Try downgrading your browser, driver binary, Selenium JAR and so forth to something that understands JSONWire protocol, or Selenium 3."
+    die "Sorry, Selenium 4 does not support $cmd!  Try downgrading your browser, driver binary, Selenium JAR and so forth to something that understands JSONWire protocol, Selenium 3, or use playwright which supports all this functionality and more."
 }
 
 sub _emit {
@@ -123,6 +128,10 @@ my %command_map = (
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
+    'setWindowRect' => {
+        execute => \&_sess_uc,
+        parse   => \&_emit,
+    },
     'maximizeWindow' => {
         execute => \&_sess_uc,
         parse   => \&_emit_null_ok,
@@ -130,6 +139,10 @@ my %command_map = (
     'maximizeWindow' => {
         execute => \&_sess_uc,
         parse   => \&_emit_null_ok,
+    },
+    'minimizeWindow' => {
+        execute => \&_sess_uc,
+        parse   => \&_emit,
     },
     'fullscreenWindow' => {
         execute => \&_sess_uc,
@@ -196,6 +209,14 @@ my %command_map = (
         },
         parse => \&_emit,
     },
+    'elementScreenshot' => {
+        session => 1,
+        execute => sub {
+            my ($session, $params) = @_;
+            $session->TakeElementScreenshot(%$params);
+        },
+        parse => \&_emit,
+    },
     'availableEngines' => {
         execute => \&_toughshit,
     },
@@ -215,6 +236,13 @@ my %command_map = (
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
+    'getCookieNamed' => {
+        execute => sub { 
+            my ($session, $params) = @_;
+            return $session->GetNamedCookie(%$params);
+        },
+        parse   => \&_emit,
+    },
     'addCookie' => {
         execute => \&_sess_uc,
         parse   => \&_emit_null_ok,
@@ -224,7 +252,11 @@ my %command_map = (
         parse   => \&_emit_null_ok,
     },
     'deleteCookieNamed' => {
-        execute => \&_toughshit,
+        execute => sub {
+            my ($session, $params) = @_;
+            return $session->deleteCookie(%$params);
+        },
+        parse => \&_emit,
     },
     'getPageSource' => {
         execute => \&_sess_uc,
@@ -235,25 +267,30 @@ my %command_map = (
         parse   => \&_emit,
     },
     'findElement' => {
-        driver => 1,
+        scd => 1,
         execute => sub {
             my ($driver, $params) = @_;
+            # Fix old selector types
+            ($params->{using}, $params->{value})  = $using{$params->{using}}->($params->{value}) if exists $using{$params->{using}};
             my $element = $driver->session->FindElement( %$params );
-            return bless( $element, $driver->webelement_class );
+            return $element;
         },
         parse => \&_emit,
     },
     'findElements' => {
-        driver => 1,
+        scd => 1,
         execute => sub {
             my ($driver, $params) = @_;
+            # Fix old selector types
+            ($params->{using}, $params->{value})  = $using{$params->{using}}->($params->{value}) if exists $using{$params->{using}};
             my @elements = $driver->session->FindElements( %$params );
-            return map { bless( $_, $driver->webelement_class ) } @elements;
+            return wantarray ? @elements : \@elements;
         },
         parse => \&_emit,
     },
     'getActiveElement' => {
-        execute => \&_toughshit,
+        execute => \&_sess_uc,
+        parse   => \&_emit,
     },
     'describeElement' => {
         execute => \&_toughshit,
@@ -265,10 +302,9 @@ my %command_map = (
         execute => \&_toughshit,
     },
     'clickElement' => {
-        element => 1,
         execute => sub {
-            my ($element) = @_;
-            $element->ElementClick();
+            my ($element, $params) = @_;
+            $element->ElementClick( %$params );
         },
         parse => \&_emit_null_ok,
     },
@@ -277,7 +313,6 @@ my %command_map = (
         execute => \&_toughshit,
     },
     'sendKeysToElement' => {
-        element => 1,
         execute => sub {
             my ($element, $params) = @_;
             $element->ElementSendKeys(%$params);
@@ -291,7 +326,6 @@ my %command_map = (
         execute => \&_toughshit,
     },
     'isElementSelected' => {
-        element => 1,
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
@@ -308,31 +342,35 @@ my %command_map = (
         parse   => \&_emit,
     },
     'getElementLocation' => {
-        element => 1,
         execute => sub {
             my ($element, $params) = @_;
             return $element->GetElementRect(%$params);
         },
         parse  => \&_emit,
     },
+    'getElementRect' => {
+        execute => \&_sess_uc,
+        parse   => \&_emit,
+    },
     'getElementLocationInView' => {
         execute => \&_toughshit,
     },
     'getElementTagName' => {
-        element => 1,
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
     'clearElement' => {
-        element => 1,
         execute => sub {
-            my ($element) = @_;
-            return $element->ElementClear();
+            my ($element, $params) = @_;
+            return $element->ElementClear( %$params );
         },
         parse   => \&_emit,
     },
     'getElementAttribute' => {
-        element => 1,
+        execute => \&_sess_uc,
+        parse   => \&_emit,
+    },
+    'getElementProperty' => {
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
@@ -351,7 +389,6 @@ my %command_map = (
         parse   => \&_emit_null_ok,
     },
     'getElementSize' => {
-        element => 1,
         execute => sub {
             my ($element, $params) = @_;
             return $element->GetElementRect(%$params);
@@ -359,12 +396,10 @@ my %command_map = (
         parse  => \&_emit,
     },
     'getElementText' => {
-        element => 1,
         execute => \&_sess_uc,
         parse   => \&_emit,
     },
     'getElementValueOfCssProperty' => {
-        element => 1,
         execute => sub {
             my ($element, $params) = @_;
             return $element->GetElementCSSValue(%$params);
@@ -381,7 +416,7 @@ my %command_map = (
     'sendKeysToPrompt' => {
         execute => sub {
             my ($session, $params) = @_;
-            $session->SendAlertText(%$params);
+            $session->SendAlertText( %$params);
         },
         parse => \&_emit_null_ok,
     },
@@ -451,6 +486,22 @@ my %command_map = (
     'executeAsyncScriptGecko' => {
         execute => \&_toughshit,
     },
+    generalAction => {
+        session => 1,
+        execute => sub {
+            my ($session, $params) = @_;
+            return $session->PerformActions(%$params);
+        },
+        parse => \&_emit_null_ok,
+    },
+    releaseGeneralAction => {
+        session => 1,
+        execute => sub {
+            my ($session, $params) = @_;
+            return $session->ReleaseActions(%$params);
+        },
+        parse => \&_emit_null_ok,
+    },
 );
 
 sub new {
@@ -476,7 +527,9 @@ sub needs_driver {
     return $command_map{$command}{driver};
 }
 
-sub needs_element {
+sub needs_scd {
     my ($self, $command) = @_;
-    return $command_map{$command}{element};
+    return $command_map{$command}{scd};
 }
+
+1;
