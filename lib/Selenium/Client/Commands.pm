@@ -1,5 +1,7 @@
 package Selenium::Client::Commands;
 
+# ABSTRACT: Map commands from Selenium 3 to 4
+
 use strict;
 use warnings;
 
