@@ -410,7 +410,7 @@ sub _is_windows {
 our @bad_methods = qw{AcceptAlert DismissAlert Back Forward Refresh ElementClick MaximizeWindow MinimizeWindow FullscreenWindow SwitchToParentFrame ElementClear};
 
 #Exempt some calls from return processing
-our @no_process = qw{Status GetAlertText GetWindowRect GetElementRect GetAllCookies};
+our @no_process = qw{Status GetAlertText GetTimeouts GetWindowRect GetElementRect GetAllCookies};
 
 sub _request($self, $method, %params) {
     my $subject = $self->{spec}->{$method};

@@ -34,25 +34,20 @@ is(scalar(@$sessions),1,"Can list sessions");
 ok($driver->status()->{ready},"status reports OK (WD4)");
 #TODO do something about available_engines
 
-#TODO: getTimeouts busted?
-SKIP: {
-    skip("getTimeouts is broken", 5);
+$driver->set_timeout('page load',10000);
+$driver->set_timeout('script',10000);
+$driver->set_timeout('implicit',10000);
+my $timeouts = $driver->get_timeouts();
+is($timeouts->{pageLoad},10000,"WD3 set/get timeouts works");
+is($timeouts->{script},10000,"WD3 set/get timeouts works");
+is($timeouts->{implicit},10000,"WD3 set/get timeouts works");
 
-    $driver->set_timeout('page load',10000);
-    $driver->set_timeout('script',10000);
-    $driver->set_timeout('implicit',10000);
-    my $timeouts = $driver->get_timeouts();
-    is($timeouts->{pageLoad},10000,"WD3 set/get timeouts works");
-    is($timeouts->{script},10000,"WD3 set/get timeouts works");
-    is($timeouts->{implicit},10000,"WD3 set/get timeouts works");
+$driver->set_async_script_timeout(20000);
+$driver->set_implicit_wait_timeout(5000);
 
-    $driver->set_async_script_timeout(20000);
-    $driver->set_implicit_wait_timeout(5000);
-
-    $timeouts = $driver->get_timeouts();
-    is($timeouts->{script},20000,"WD3 shim for set_async timeouts works");
-    is($timeouts->{implicit},5000,"WD3 shim for implicit timeouts works");
-}
+$timeouts = $driver->get_timeouts();
+is($timeouts->{script},20000,"WD3 shim for set_async timeouts works");
+is($timeouts->{implicit},5000,"WD3 shim for implicit timeouts works");
 
 my $loc = abs_path("$FindBin::Bin/test.html");
 ok($driver->get("file://$loc"),"Can load a web page (WD3)");
@@ -229,7 +224,6 @@ is(exception { $driver->quit() }, undef, "Can quit (WD3)");
 sub alertify {
     my $driver = shift;
     is(eval { $driver->get_alert_text() } // $@,'BEEE DOOO', "Can get alert text");
-    die;
     is( exception { $driver->accept_alert() }, undef, "Can dismiss alert");
     is(eval { $driver->get_alert_text() } // $@,'Are you a fugitive from Justice?', "Can get alert text on subsequent alert");
     is( exception { $driver->send_alert_text( text => "HORGLE") }, undef,"send_keys_to_prompt works");
