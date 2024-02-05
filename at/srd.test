@@ -229,6 +229,7 @@ is(exception { $driver->quit() }, undef, "Can quit (WD3)");
 sub alertify {
     my $driver = shift;
     is(eval { $driver->get_alert_text() } // $@,'BEEE DOOO', "Can get alert text");
+    die;
     is( exception { $driver->accept_alert() }, undef, "Can dismiss alert");
     is(eval { $driver->get_alert_text() } // $@,'Are you a fugitive from Justice?', "Can get alert text on subsequent alert");
     is( exception { $driver->send_alert_text( text => "HORGLE") }, undef,"send_keys_to_prompt works");

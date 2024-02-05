@@ -3,6 +3,8 @@ package Selenium::Client::Commands;
 use strict;
 use warnings;
 
+use Carp::Always;
+
 # Polyfill from Selenium 4's spec to JSONWire + Selenium 3
 
 sub _toughshit {
@@ -29,7 +31,8 @@ sub _timeout {
 sub _sess_uc {
     my ($session, $params, $cmd) = @_;
     $cmd = ucfirst($cmd);
-    return $session->$cmd->($session, %$params);
+    die "NO SESSION PROVIDED!" unless $session;
+    return $session->$cmd(%$params);
 }
 
 my %command_map = (
@@ -365,12 +368,7 @@ my %command_map = (
         execute => \&_toughshit,
     },
     'getAlertText' => {
-        execute => sub {
-            #XXX this gives you a 404...but the actual answer we want in the friggin' body. AMAZING!
-            return eval {
-                _sess_uc(@_)
-            };
-        },
+        execute => \&_sess_uc, 
         parse   => \&_emit,
     },
     'sendKeysToPrompt' => {

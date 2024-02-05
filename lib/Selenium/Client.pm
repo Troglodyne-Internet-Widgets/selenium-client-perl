@@ -410,7 +410,7 @@ sub _is_windows {
 our @bad_methods = qw{AcceptAlert DismissAlert Back Forward Refresh ElementClick MaximizeWindow MinimizeWindow FullscreenWindow SwitchToParentFrame ElementClear};
 
 #Exempt some calls from return processing
-our @no_process = qw{Status GetWindowRect GetElementRect GetAllCookies};
+our @no_process = qw{Status GetAlertText GetWindowRect GetElementRect GetAllCookies};
 
 sub _request($self, $method, %params) {
     my $subject = $self->{spec}->{$method};
@@ -441,8 +441,6 @@ sub _request($self, $method, %params) {
 
     foreach my $param (keys(%params)) {
         confess "$param is required for $method" unless exists $params{$param};
-        use Data::Dumper;
-        print Dumper(\%params, $url);
         delete $params{$param} if $url =~ s/{\Q$param\E}/$params{$param}/g;
     }
 
@@ -489,6 +487,7 @@ sub _request($self, $method, %params) {
     if ($decoded_content->{sessionId}) {
         $decoded_content->{value} = [{ capabilities => $decoded_content->{value} }, { sessionId => $decoded_content->{sessionId} }];
     }
+
     return $self->_objectify($decoded_content,$inject);
 }
 
@@ -524,7 +523,6 @@ sub _objectify($self,$result,$inject) {
         my @objects = keys(%$to_objectify);
         foreach my $object (@objects) {
 
-            print "OBJECTIFYING $object\n";
             my $has_class = exists $classes{$object};
 
             my $base_object = $inject // {};
