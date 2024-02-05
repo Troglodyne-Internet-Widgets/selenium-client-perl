@@ -56,6 +56,7 @@ alertify($driver);
 
 my $handle = $driver->get_current_window_handle();
 ok($handle,"Got a window handle (WD3)");
+
 cmp_bag($driver->get_window_handles(),[$handle],"Can list window handles (WD3)");
 
 my $sz = $driver->get_window_size();
@@ -73,7 +74,6 @@ $driver->get("file://$otherloc");
 $driver->go_back();
 
 alertify();
-
 like($driver->get_title(),qr/test/i,"go_back works (WD3)");
 
 $driver->go_forward();

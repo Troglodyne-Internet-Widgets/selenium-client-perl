@@ -479,8 +479,9 @@ sub _request($self, $method, %params) {
         cluck "$res->{reason} :\n Consult $subject->{href}\nRaw Error:\n$res->{content}\n" unless $res->{success};
     }
 
+    #XXX should be caught below by objectify
     if (grep { $method eq $_ } @no_process) {
-        return @{$decoded_content->{value}} if ref $decoded_content->{value} eq 'ARRAY';
+        #return @{$decoded_content->{value}} if ref $decoded_content->{value} eq 'ARRAY';
         return $decoded_content->{value};
     }
     #XXX sigh
@@ -518,7 +519,7 @@ sub _objectify($self,$result,$inject) {
     my @objs;
     foreach my $to_objectify (@$subject) {
         # If we have just data return it
-        return @$subject if ref $to_objectify ne 'HASH';
+        return $subject if ref $to_objectify ne 'HASH';
 
         my @objects = keys(%$to_objectify);
         foreach my $object (@objects) {

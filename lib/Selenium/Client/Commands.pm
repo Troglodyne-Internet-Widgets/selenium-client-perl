@@ -119,6 +119,10 @@ my %command_map = (
         },
         parse   => \&_emit,
     },
+    'getWindowRect' => {
+        execute => \&_sess_uc,
+        parse   => \&_emit,
+    },
     'maximizeWindow' => {
         execute => \&_sess_uc,
         parse   => \&_emit_null_ok,
@@ -146,7 +150,10 @@ my %command_map = (
         parse   => \&_emit_null_ok,
     },
     'getCurrentUrl' => {
-        execute => \&_sess_uc,
+        execute => sub {
+            my ($session, $params) = @_;
+            return $session->GetCurrentURL( %$params );
+        },
         parse   => \&_emit,
     },
     'get' => {
