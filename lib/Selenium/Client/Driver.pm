@@ -269,13 +269,16 @@ sub _execute_command($self, $res, $params={}) {
     $macguffin    = $self->commands->needs_scd( $res->{command} )     ? $self : $macguffin;
     die "Could not acquire driver/session!" unless $macguffin;
     local $@;
+    my $result;
     #eval {
-        my $resp = $self->commands->request( $macguffin, $res->{command}, $params );
-        return $self->commands->parse_response( $macguffin, $res->{command}, $resp );
+        my $resp   = $self->commands->request( $macguffin, $res->{command}, $params );
+        my $result =  $self->commands->parse_response( $macguffin, $res->{command}, $resp );
+        1;
     #} or do {
     #    return $self->error_handler->( $macguffin, $@, { %$params, %$res } ) if $self->error_handler;
     #    die $@;
     #};
+    return $result;
 }
 
 sub has_javascript { 1 }

@@ -482,7 +482,9 @@ sub _request($self, $method, %params) {
 
     #XXX should be caught below by objectify
     if (grep { $method eq $_ } @no_process) {
-        #return @{$decoded_content->{value}} if ref $decoded_content->{value} eq 'ARRAY';
+        if (ref $decoded_content->{value} eq 'ARRAY') {
+            return wantarray ? @{$decoded_content->{value}} : $decoded_content->{value};
+        }
         return $decoded_content->{value};
     }
     #XXX sigh

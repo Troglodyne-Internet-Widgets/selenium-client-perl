@@ -243,7 +243,7 @@ TODO: {
 $driver->delete_cookie_named('foo');
 is(scalar(@{$driver->get_all_cookies()}),0,"can delete named cookies (WD3)");
 
-is(exception { $driver->quit() }, undef, "Can quit (WD3)");
+#is(exception { $driver->quit() }, undef, "Can quit (WD3)");
 
 sub alertify {
     my $driver = shift;

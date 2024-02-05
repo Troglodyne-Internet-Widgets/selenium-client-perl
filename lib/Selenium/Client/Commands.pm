@@ -254,7 +254,7 @@ my %command_map = (
     'deleteCookieNamed' => {
         execute => sub {
             my ($session, $params) = @_;
-            return $session->deleteCookie(%$params);
+            return $session->DeleteCookie(%$params);
         },
         parse => \&_emit,
     },
