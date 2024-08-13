@@ -15,7 +15,7 @@ nytprof.out
 
 # Dizt::Zilla
 /.build/
-/Selenium-Specification-*
+/Selenium-Client-*
 
 # Module::Build
 _build/
