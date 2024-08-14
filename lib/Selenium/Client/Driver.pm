@@ -22,11 +22,55 @@ use Selenium::Client::WDKeys;
 
 =head1 DESCRIPTION
 
-(Mostly) drop-in replacement for Selenium::Remote::Driver which supports selenium 4.
+Drop-in replacement for L<Selenium::Remote::Driver> which supports selenium 4.
 
-See the documentation for Selenium::Remote::Driver for how to use this module unless otherwise noted below.
+See the documentation for L<Selenium::Remote::Driver> for how to use this module unless otherwise noted below.
 
-The primary difference here is that we do not support direct driver usage without intermediation by the SeleniumHQ JAR any longer.
+Also, we support all valid L<Selenium::Client> constructor arguments, so you will likely want to consult those.
+
+There are also a number of constructor options from L<Selenium::Remote::Driver> which are either entirely incompatible with selenium 4, are unimplemented or were bad ideas in the first place:
+
+=over 4
+
+=item C<platform> - TODO. Will have to work in Selenium::Client first.
+
+=item C<default_finder>  - TODO.  Will need a shim in Selenium::Client::Commands.
+
+=item C<extra_capabilities> - TODO. Use the options relevant to Selenium::Client instead
+
+=item C<base_url> - TODO. Will have to work in Selenium::Client first.
+
+=item C<session_id> - TODO. I don't even know if you can do this with the W3C spec.
+
+=item C<inner_window_size> - TODO. This function doesn't work right on any browser so we could only do a "best effort" try.
+
+=item C<error_handler> - TODO.  While post_callbacks are supported, there is no shim to make old error_handler subs work as post_callbacks.
+
+=item C<proxy> - TODO. not sure this is even possible with S4 caps.
+
+=item C<accept_ssl_certs> - Not in the W3C spec.  Just make a self-signed CA and slap that sucker in /etc/ssl/certs, then use that to issue your self-signed certs.
+
+=item C<firefox_profile> - Not in the W3C spec.  If you can't get it done with moz:firefoxOptions, it ain't getting done.
+
+=item C<pageLoadStrategy> - Not in the W3C spec.  If you want to properly wait on page loads, you will need either a view-source based state-machine or executing scripts.  Welcome to hell.
+
+=item C<webelement_class> - Subclass Selenium::Client::Driver instead
+
+=item C<javascript> - Are you really using selenium to disable javascript?  Seek Help.
+
+=item C<version> - good luck getting random versions of browsers to work!!! LOL!!!!  Playwright patches them rather than rely on perpetually broken driver binaries.
+
+=back
+
+Furthermore, selenium 4 totally fails at dealing with cookies and alerts.
+
+=head1 ALTERNATIVES
+
+My advice is to give up on this nonsense and...
+
+    use Playwright;
+
+Instead.  Or, wait until someone implements a WC3 compliant selenium server using playwright and we can end the madness.
 
 =cut
 
