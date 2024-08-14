@@ -208,10 +208,63 @@ sub _execute_script_suffix ( $self, $suffix = undef ) {
 sub new ( $class, %options ) {
     my $self = bless( { %options, is_wd3 => 1 }, $class );
 
-    # TODO should probably map the options here
+    # map the options
+    my %optmap = (
+        # SRD / common options
+        browser_name       => 'browser',
+        debug              => 'debug',
+        remote_server_addr => 'host',
+        port               => 'port',
+        auto_close         => 'auto_close',
+        ua                 => 'ua',
+
+        # Stuff that does not work from SRD:
+
+        # version - good luck getting random versions of browsers to work!!! LOL!!!!
+        # platform - TODO currently unsupported
+        # accept_ssl_certs - NOT IN THE SPEC, U CAN POUND SAND IF U AINT AN INTERMEDIATE SIGNER, HA HA HA HA.
+        # firefox_provile - NOT IN THE SPEC
+        # javascript      - piss off, use mechanize if you want this off
+        # default_finder  - TODO currently unsupported
+        # session_id      - TODO currently unsupported
+        # pageLoadStrategy - NOT IN THE SPEC
+        # extra_capabilities - NOT IN THE SPEC
+        # base_url - TODO currently unsupported
+        # inner window size - XXX well, this function doesn't even work on selenium 4 so we *can't* support it.
+        # error_handler - TODO will probably have to shim this, may not be possible idk
+        # webelement_class- just no.
+        # proxy - TODO currently unsupported, not sure this is even in the spec.
+
+        # SCD exclusive options
+        driver         => 'driver',
+        driver_version => 'driver_version',
+        headless       => 'headless',
+        fatal          => 'fatal',
+        post_callbacks => 'post_callbacks',
+        normalize      => 'normalize',
+        prefix         => 'prefix',
+        scheme         => 'scheme',
+        nofetch        => 'nofetch',
+        client_dir     => 'client_dir',
+        post_callbacks => 'post_callbacks', # TODO see error_handler note above        
+    );
+
     my $driver = $self->driver();
     if ( !$driver ) {
-        $driver = Selenium::Client->new(%options);
+
+        my %actual;
+        foreach my $option (keys(%options)) {
+            if (!exists $optmap{$option}) {
+                warn "Passed unsupported option '$option', which has been dropped.";
+                next;
+            }
+            $actual{$optmap{$option}} = $options{$option};
+        }
+
+        # Set the version explicitly, as these are conflicting names between the two modules.
+        $actual{version} = 'stable';
+
+        $driver = Selenium::Client->new(%actual);
         $self->driver($driver);
     }
     my $status = $driver->Status();

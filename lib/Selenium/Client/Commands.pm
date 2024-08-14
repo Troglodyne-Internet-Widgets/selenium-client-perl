@@ -64,7 +64,8 @@ my %command_map = (
             }
 
             my %in  = %$params ? ( capabilities => { alwaysMatch => $params } ) : ();
-            my @ret = $driver->NewSession(%in);
+            #XXX TODO the params we build here are worse than what is autobuilt by default.  Ignore them totally.
+            my @ret = $driver->NewSession();
             return [@ret];
         },
         parse => sub {
