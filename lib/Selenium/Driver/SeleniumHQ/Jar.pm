@@ -48,13 +48,14 @@ sub build_spawn_opts ( $class, $object ) {
 
     # Default to new selenium versions, but allow fetching old stuff
     $object->{driver_major_version} = 4;
-    ($object->{driver_major_version}) = $object->{driver_version} =~ m/-(\d+)\.\d+\.\d.*\.jar$/ if $object->{driver_version};
+    ( $object->{driver_major_version} ) = $object->{driver_version} =~ m/-(\d+)\.\d+\.\d.*\.jar$/ if $object->{driver_version};
 
     die "Could not determine driver major version!" unless $object->{driver_major_version};
 
     if ( $object->{driver_major_version} < 4 ) {
         ( $object->{driver_file}, $object->{driver_major_version} ) = find_and_fetch_old_releases( File::Spec->catdir( $object->{client_dir}, "jars" ), $object->{driver_version}, $object->{ua} );
-    } else {
+    }
+    else {
         ( $object->{driver_file}, $object->{driver_major_version} ) = find_and_fetch( File::Spec->catdir( $object->{client_dir}, "jars" ), $object->{driver_version}, $object->{ua} );
     }
     $object->{driver_config} //= _build_config($object);
@@ -128,14 +129,14 @@ Also fetches any versions we don't already have.
 
 =cut
 
-sub find_and_fetch ( $dir, $version = undef, $ua=undef ) {
+sub find_and_fetch ( $dir, $version = undef, $ua = undef ) {
     make_path($dir) unless -d $dir;
 
     $version ||= undef;
 
-    my @files = Github::ReleaseFetcher::fetch($dir, 'SeleniumHQ', 'selenium', qr/\.jar$/, undef, $version, $ua );
+    my @files                 = Github::ReleaseFetcher::fetch( $dir, 'SeleniumHQ', 'selenium', qr/\.jar$/, undef, $version, $ua );
     my $latest_jar_at_version = pop(@files);
-    my ($actual_version) = $latest_jar_at_version =~ m/-(\d+)\.\d+\.\d.*\.jar$/;
+    my ($actual_version)      = $latest_jar_at_version =~ m/-(\d+)\.\d+\.\d.*\.jar$/;
 
     return ( $latest_jar_at_version, $actual_version );
 }

@@ -63,7 +63,8 @@ my %command_map = (
                 delete $params->{$key} unless $params->{$key};
             }
 
-            my %in  = %$params ? ( capabilities => { alwaysMatch => $params } ) : ();
+            my %in = %$params ? ( capabilities => { alwaysMatch => $params } ) : ();
+
             #XXX TODO the params we build here are worse than what is autobuilt by default.  Ignore them totally.
             my @ret = $driver->NewSession();
             return [@ret];

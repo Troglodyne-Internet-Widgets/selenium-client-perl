@@ -254,6 +254,7 @@ sub new ( $class, %options ) {
 
     # map the options
     my %optmap = (
+
         # SRD / common options
         browser_name       => 'browser',
         debug              => 'debug',
@@ -290,19 +291,19 @@ sub new ( $class, %options ) {
         scheme         => 'scheme',
         nofetch        => 'nofetch',
         client_dir     => 'client_dir',
-        post_callbacks => 'post_callbacks', # TODO see error_handler note above        
+        post_callbacks => 'post_callbacks',    # TODO see error_handler note above
     );
 
     my $driver = $self->driver();
     if ( !$driver ) {
 
         my %actual;
-        foreach my $option (keys(%options)) {
-            if (!exists $optmap{$option}) {
+        foreach my $option ( keys(%options) ) {
+            if ( !exists $optmap{$option} ) {
                 warn "Passed unsupported option '$option', which has been dropped.";
                 next;
             }
-            $actual{$optmap{$option}} = $options{$option};
+            $actual{ $optmap{$option} } = $options{$option};
         }
 
         # Set the version explicitly, as these are conflicting names between the two modules.
