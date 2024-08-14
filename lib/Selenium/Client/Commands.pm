@@ -139,11 +139,7 @@ my %command_map = (
     },
     'maximizeWindow' => {
         execute => \&_sess_uc,
-        parse   => \&_emit_null_ok,
-    },
-    'maximizeWindow' => {
-        execute => \&_sess_uc,
-        parse   => \&_emit_null_ok,
+        parse   => \&_emit,
     },
     'minimizeWindow' => {
         execute => \&_sess_uc,
@@ -151,7 +147,7 @@ my %command_map = (
     },
     'fullscreenWindow' => {
         execute => \&_sess_uc,
-        parse   => \&_emit_null_ok,
+        parse   => \&_emit,
     },
     'setWindowSize' => {
         execute => sub {
@@ -394,7 +390,7 @@ my %command_map = (
     'close' => {
         execute => sub {
             my ( $session, $params ) = @_;
-            $session->closeWindow(%$params);
+            $session->CloseWindow(%$params);
         },
         parse => \&_emit_null_ok,
     },

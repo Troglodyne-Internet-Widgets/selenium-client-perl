@@ -21,13 +21,15 @@ my $driver = Selenium::Client::Driver->new(
     port => 4444,
     browser_name => 'firefox',
     accept_ssl_certs => 1,
-    debug => 1,
+    debug => $ENV{DEBUG},
     headless => 1,
 );
 isa_ok($driver,'Selenium::Client::Driver',"Can get new S::C::D with WebDriver4");
 $driver->debug_on();
 
+#TODO this is broken and I don't know why yet
 is($driver->get_capabilities()->{browserName},'firefox',"Can get Capabilities correctly (WD3)");
+
 my $sessions = $driver->get_sessions();
 is(scalar(@$sessions),1,"Can list sessions");
 
@@ -73,7 +75,7 @@ my $otherloc = abs_path("$FindBin::Bin/other.html");
 $driver->get("file://$otherloc");
 $driver->go_back();
 
-alertify();
+alertify($driver);
 like($driver->get_title(),qr/test/i,"go_back works (WD3)");
 
 $driver->go_forward();
@@ -81,7 +83,7 @@ like($driver->get_page_source(),qr/ZIPPY/,"go_forward & get_page_source works (W
 is(exception { $driver->refresh() }, undef, "refresh works (WD3)");
 $driver->go_back();
 
-alertify();
+alertify($driver);
 
 #TODO execute_*_script testing
 
@@ -178,10 +180,10 @@ $input->send_keys('eee');
 $driver->mouse_move_to_location( element => $driver->find_element('body','tag_name'));
 $driver->click();
 
-#XXX this has to be a BUG in the driver, the keys are getting thru
+#XXX sigh will have to polyfill this one
 is($input->get_attribute('value'),'defaulthowdyeee',"element->get_attribute() emulates old behavior thru get_property (WD3)");
 is($input->get_attribute('value',1),'default',"element->get_attribute() can do it's actual job (WD3)");
-is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaulthowdyeee',"execute_script works, and so does send_keys_to_active_element & element->send_keys (WD3)");
+is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaultHOWDYeee',"execute_script works, and so does send_keys_to_active_element & element->send_keys (WD3)");
 $input->clear();
 is($input->get_property('value'),'',"clear() works (WD3)");
 
