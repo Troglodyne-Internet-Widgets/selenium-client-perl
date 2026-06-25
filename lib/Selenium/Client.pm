@@ -363,6 +363,9 @@ sub _wait ($self) {
 }
 
 sub DESTROY ($self) {
+    # IF we already  got whacked somewhere else in a DESTROY, give up
+    return if !$self;
+
     return unless $self->{auto_close};
 
     local $?;    # Avoid affecting the exit status
